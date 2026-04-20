@@ -1,35 +1,25 @@
-import { collection, getDocs, doc, getDoc, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-const COLLECTION = "analyses";
-
-// 가장 최신 날짜의 stocks 반환 (리스트 뷰용)
+// 리스트 뷰: 모든 종목의 최신 분석 데이터 반환
 export async function fetchLatestStocks() {
-  const q = query(collection(db, COLLECTION), orderBy("date", "desc"));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) return { stocks: [], date: null };
-  const latest = snapshot.docs[0].data();
-  return { stocks: latest.stocks ?? [], date: latest.date };
+  const snapshot = await getDocs(collection(db, "stocks"));
+  const stocks = snapshot.docs.map((d) => d.data());
+  const date = stocks[0]?.latestDate ?? null;
+  return { stocks, date };
 }
 
-// 특정 ticker가 있는 모든 날짜 목록 반환 (상세 페이지 날짜 탭용)
+// 상세 페이지: 특정 ticker의 분석 날짜 목록 반환 (최신순)
 export async function fetchDatesForTicker(ticker) {
-  const q = query(collection(db, COLLECTION), orderBy("date", "desc"));
-  const snapshot = await getDocs(q);
-  const dates = [];
-  snapshot.docs.forEach((d) => {
-    const { date, stocks } = d.data();
-    if (stocks?.some((s) => s.ticker === ticker)) {
-      dates.push(date);
-    }
-  });
-  return dates; // 최신순 정렬
+  const snapshot = await getDocs(collection(db, "stocks", ticker, "analyses"));
+  return snapshot.docs
+    .map((d) => d.id)
+    .sort((a, b) => b.localeCompare(a));
 }
 
-// 특정 날짜의 특정 ticker 데이터 반환
+// 상세 페이지: 특정 ticker의 특정 날짜 분석 데이터 반환
 export async function fetchStockByDateAndTicker(date, ticker) {
-  const snap = await getDoc(doc(db, COLLECTION, date));
+  const snap = await getDoc(doc(db, "stocks", ticker, "analyses", date));
   if (!snap.exists()) return null;
-  const stocks = snap.data().stocks ?? [];
-  return stocks.find((s) => s.ticker === ticker) ?? null;
+  return snap.data();
 }

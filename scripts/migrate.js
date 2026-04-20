@@ -1,12 +1,11 @@
 /**
- * 기존 stocks.js 데이터를 Firestore에 업로드하는 1회성 스크립트.
+ * stocks.js 데이터를 새 구조(stocks/{ticker}/analyses/{date})로 Firestore에 업로드.
  * 실행: node scripts/migrate.js
  */
 import { readFileSync } from "fs";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
-// .env 파일에서 Firebase config 읽기
 const env = {};
 readFileSync(".env", "utf-8").split("\n").forEach(line => {
   const idx = line.indexOf("=");
@@ -27,12 +26,20 @@ const db = getFirestore(app);
 const { stocks } = await import("../src/data/stocks.js");
 const ANALYSIS_DATE = "2026-04-19";
 
-console.log(`📦 ${stocks.length}개 종목 → Firestore analyses/${ANALYSIS_DATE} 업로드 중...`);
+console.log(`📦 ${stocks.length}개 종목 → stocks/{ticker}/analyses/${ANALYSIS_DATE} 업로드 중...`);
 
-await setDoc(doc(db, "analyses", ANALYSIS_DATE), {
-  date: ANALYSIS_DATE,
-  stocks,
-});
+for (const stock of stocks) {
+  const stockData = { ...stock, latestDate: ANALYSIS_DATE };
+  const analysisData = { ...stock, date: ANALYSIS_DATE };
+
+  // stocks/{ticker} — 최신 데이터 + latestDate 내장
+  await setDoc(doc(db, "stocks", stock.ticker), stockData);
+
+  // stocks/{ticker}/analyses/{date} — 날짜별 스냅샷
+  await setDoc(doc(db, "stocks", stock.ticker, "analyses", ANALYSIS_DATE), analysisData);
+
+  console.log(`  ✓ ${stock.ticker}`);
+}
 
 console.log(`✅ 완료`);
 process.exit(0);
