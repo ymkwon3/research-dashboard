@@ -440,6 +440,26 @@ function DetailPage({ stock: initialStock, analysisDate: initialDate, onBack }) 
               </>
             )}
 
+            {/* 트리니티항공 브랜딩 현황 */}
+            {stock.brandingStatus && (
+              <SectionBox title="브랜딩 현황">
+                <div style={{ display:"flex", flexDirection:"column", gap: 7 }}>
+                  {[
+                    { label: "종목명", value: stock.brandingStatus.stockName },
+                    { label: "영문명", value: stock.brandingStatus.englishName },
+                    { label: "운항 브랜드", value: stock.brandingStatus.operationBrand },
+                    { label: "사명 의미", value: stock.brandingStatus.meaning },
+                    { label: "모회사", value: stock.brandingStatus.parent },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ display:"flex", gap: 10, alignItems:"flex-start" }}>
+                      <span style={{ fontSize: 10, color:"rgba(255,255,255,0.35)", flexShrink: 0, paddingTop: 2, width: 60 }}>{label}</span>
+                      <span style={{ fontSize: 11, color:"rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </SectionBox>
+            )}
+
             {/* 팔란티어 버리 숏 분석 */}
             {stock.bearCaseAnalysis?.burry && (
               <SectionBox title="버리 공매도 분석">
