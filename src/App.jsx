@@ -453,6 +453,60 @@ function DetailPage({ stock: initialStock, analysisDate: initialDate, onBack }) 
               </SectionBox>
             )}
 
+            {/* SK하이닉스 HBM 로드맵 */}
+            {stock.hbmRoadmap && (
+              <SectionBox title="HBM 로드맵">
+                <div style={{ display:"flex", flexDirection:"column", gap: 10 }}>
+                  {stock.hbmRoadmap.map((h, i) => (
+                    <div key={i} style={{ background:"rgba(255,255,255,0.03)", borderRadius: 8, padding:"10px 12px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 5 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color:"#f8fafc" }}>{h.gen}</span>
+                        <span style={{ fontSize: 10, padding:"2px 7px", borderRadius: 4, background:"rgba(34,197,94,0.15)", color:"#4ade80" }}>{h.status}</span>
+                      </div>
+                      <p style={{ fontSize: 11, color:"rgba(255,255,255,0.5)", margin: "0 0 4px", lineHeight: 1.6 }}>{h.detail}</p>
+                      <div style={{ fontSize: 10, color:"#f59e0b" }}>점유율: {h.share}</div>
+                      {h.customers && <div style={{ fontSize: 10, color:"rgba(255,255,255,0.35)", marginTop: 2 }}>고객: {h.customers}</div>}
+                      {h.tsmc && <div style={{ fontSize: 10, color:"rgba(255,255,255,0.35)", marginTop: 2 }}>TSMC: {h.tsmc}</div>}
+                    </div>
+                  ))}
+                </div>
+              </SectionBox>
+            )}
+
+            {/* SK하이닉스 생산 인프라 */}
+            {stock.infrastructure && (
+              <SectionBox title="생산 인프라">
+                <div style={{ display:"flex", flexDirection:"column", gap: 7 }}>
+                  {stock.infrastructure.map((inf, i) => (
+                    <div key={i} style={{ display:"flex", gap: 10, alignItems:"flex-start", padding:"6px 0", borderBottom: i < stock.infrastructure.length-1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color:"#60a5fa", flexShrink: 0, minWidth: 90 }}>{inf.facility}</span>
+                      <span style={{ fontSize: 11, color:"rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{inf.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </SectionBox>
+            )}
+
+            {/* SK하이닉스 주요 고객 */}
+            {stock.keyCustomers && (
+              <SectionBox title="주요 고객">
+                <div style={{ display:"flex", flexDirection:"column", gap: 7 }}>
+                  {stock.keyCustomers.map((c, i) => {
+                    const statusColor = c.status === "핵심" ? "#4ade80" : c.status === "협의" ? "#f59e0b" : "#60a5fa";
+                    return (
+                      <div key={i} style={{ display:"flex", gap: 10, alignItems:"flex-start", padding:"6px 0", borderBottom: i < stock.keyCustomers.length-1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                        <div style={{ flexShrink: 0, display:"flex", flexDirection:"column", alignItems:"flex-start", gap: 3, minWidth: 90 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color:"#f8fafc" }}>{c.name}</span>
+                          <span style={{ fontSize: 9, padding:"1px 5px", borderRadius: 3, background:`${statusColor}22`, color: statusColor }}>{c.status}</span>
+                        </div>
+                        <span style={{ fontSize: 11, color:"rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{c.detail}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </SectionBox>
+            )}
+
             {/* 넥슨 파이프라인 */}
             {stock.pipeline && (
               <SectionBox title="신작 파이프라인">
