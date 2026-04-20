@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { stocks, analysisDate, getScoreColor, getScoreLabel } from "./data/stocks";
+import { useState, useEffect } from "react";
+import { getScoreColor, getScoreLabel } from "./data/stocks";
+import { fetchLatestStocks, fetchDatesForTicker, fetchStockByDateAndTicker } from "./data/firestore";
 
 const categoryColor = { 미장: "#3b82f6", 국장: "#22c55e", 크립토: "#f59e0b" };
 
@@ -104,8 +105,42 @@ function StockCard({ stock, onClick }) {
 // ────────────────────────────────────────────────────────────
 function ListView({ onSelect }) {
   const [filter, setFilter] = useState("전체");
+  const [stocks, setStocks] = useState([]);
+  const [analysisDate, setAnalysisDate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchLatestStocks()
+      .then(({ stocks, date }) => {
+        setStocks(stocks);
+        setAnalysisDate(date);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
   const categories = ["전체","미장","국장","크립토"];
   const sorted = [...(filter === "전체" ? stocks : stocks.filter(s => s.category === filter))].sort((a,b) => b.midScore - a.midScore);
+
+  if (loading) return (
+    <div style={{ background:"#0a0f1a", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(255,255,255,0.4)", fontFamily:"'SF Pro Display',-apple-system,sans-serif" }}>
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>⏳</div>
+        <div style={{ fontSize: 14 }}>데이터 불러오는 중...</div>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{ background:"#0a0f1a", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#f87171", fontFamily:"'SF Pro Display',-apple-system,sans-serif" }}>
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontSize: 14 }}>데이터 로드 실패: {error}</div>
+        <div style={{ fontSize: 12, marginTop: 8, color:"rgba(255,255,255,0.3)" }}>.env 파일의 Firebase 설정을 확인해주세요.</div>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ background:"#0a0f1a", minHeight:"100vh", fontFamily:"'SF Pro Display',-apple-system,sans-serif", color:"#f8fafc", padding:"28px 24px" }}>
@@ -118,7 +153,7 @@ function ListView({ onSelect }) {
               <span style={{ color:"#60a5fa" }}>종목</span> 분석 대시보드
             </h1>
             <p style={{ fontSize: 12, color:"rgba(255,255,255,0.35)", margin:"5px 0 0" }}>
-              {analysisDate} · {stocks.length}개 종목 분석
+              {analysisDate ?? "—"} · {stocks.length}개 종목 분석
             </p>
           </div>
           <div style={{ display:"flex", gap: 6 }}>
@@ -135,7 +170,7 @@ function ListView({ onSelect }) {
 
         {/* 카드 그리드 */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap: 14 }}>
-          {sorted.map(s => <StockCard key={s.ticker} stock={s} onClick={onSelect} />)}
+          {sorted.map(s => <StockCard key={s.ticker} stock={s} onClick={(stock) => onSelect(stock, analysisDate)} />)}
         </div>
 
         {/* 범례 */}
@@ -165,17 +200,65 @@ function ListView({ onSelect }) {
 // ────────────────────────────────────────────────────────────
 // 상세 페이지
 // ────────────────────────────────────────────────────────────
-function DetailPage({ stock, onBack }) {
+function DetailPage({ stock: initialStock, analysisDate: initialDate, onBack }) {
   const scenarioAccent = ["#4ade80", "#60a5fa", "#f87171"];
+
+  const [stock, setStock] = useState(initialStock);
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [dateLoading, setDateLoading] = useState(false);
+
+  useEffect(() => {
+    fetchDatesForTicker(initialStock.ticker).then(setAvailableDates);
+  }, [initialStock.ticker]);
+
+  const handleDateChange = async (date) => {
+    if (date === selectedDate) return;
+    setDateLoading(true);
+    const data = await fetchStockByDateAndTicker(date, initialStock.ticker);
+    if (data) {
+      setStock(data);
+      setSelectedDate(date);
+    }
+    setDateLoading(false);
+  };
 
   return (
     <div style={{ background:"#0a0f1a", minHeight:"100vh", fontFamily:"'SF Pro Display',-apple-system,sans-serif", color:"#f8fafc", padding:"24px" }}>
       <div style={{ maxWidth: 1200, margin:"0 auto" }}>
 
-        {/* 뒤로가기 */}
-        <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap: 6, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding:"6px 14px", color:"rgba(255,255,255,0.7)", fontSize: 13, cursor:"pointer", marginBottom: 20, fontWeight: 500 }}>
-          ← 목록으로
-        </button>
+        {/* 상단 네비게이션 */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: 20, flexWrap:"wrap", gap: 12 }}>
+          <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap: 6, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding:"6px 14px", color:"rgba(255,255,255,0.7)", fontSize: 13, cursor:"pointer", fontWeight: 500 }}>
+            ← 목록으로
+          </button>
+
+          {/* 날짜 탭 (분석 날짜가 2개 이상일 때만 표시) */}
+          {availableDates.length > 1 && (
+            <div style={{ display:"flex", alignItems:"center", gap: 8 }}>
+              <span style={{ fontSize: 11, color:"rgba(255,255,255,0.3)" }}>분석 날짜</span>
+              <div style={{ display:"flex", gap: 5 }}>
+                {availableDates.map(date => (
+                  <button
+                    key={date}
+                    onClick={() => handleDateChange(date)}
+                    disabled={dateLoading}
+                    style={{
+                      padding:"5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                      cursor: dateLoading ? "default" : "pointer", border:"none", transition:"all 0.15s",
+                      background: selectedDate === date ? "#3b82f6" : "rgba(255,255,255,0.07)",
+                      color: selectedDate === date ? "#fff" : "rgba(255,255,255,0.5)",
+                      opacity: dateLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {date}
+                  </button>
+                ))}
+              </div>
+              {dateLoading && <span style={{ fontSize: 11, color:"rgba(255,255,255,0.3)" }}>로딩 중...</span>}
+            </div>
+          )}
+        </div>
 
         {/* 종목 헤더 */}
         <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding:"20px 24px", marginBottom: 20 }}>
@@ -189,6 +272,9 @@ function DetailPage({ stock, onBack }) {
                 <span style={{ fontSize: 11, padding:"3px 9px", borderRadius: 5, background: stock.tagColor+"20", color: stock.tagColor, fontWeight: 700 }}>{stock.tag}</span>
                 {stock.earning !== "—" && (
                   <span style={{ fontSize: 11, padding:"3px 9px", borderRadius: 5, background:"rgba(251,191,36,0.15)", color:"#fbbf24", fontWeight: 600 }}>어닝 {stock.earning}</span>
+                )}
+                {selectedDate && (
+                  <span style={{ fontSize: 11, padding:"3px 9px", borderRadius: 5, background:"rgba(255,255,255,0.07)", color:"rgba(255,255,255,0.4)", marginLeft:"auto" }}>{selectedDate} 기준</span>
                 )}
               </div>
               {/* 가격 */}
@@ -404,10 +490,10 @@ function DetailPage({ stock, onBack }) {
 // 루트
 // ────────────────────────────────────────────────────────────
 export default function App() {
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null); // { stock, date }
 
   if (selected) {
-    return <DetailPage stock={selected} onBack={() => setSelected(null)} />;
+    return <DetailPage stock={selected.stock} analysisDate={selected.date} onBack={() => setSelected(null)} />;
   }
-  return <ListView onSelect={setSelected} />;
+  return <ListView onSelect={(stock, date) => setSelected({ stock, date })} />;
 }
