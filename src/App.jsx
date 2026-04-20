@@ -405,6 +405,62 @@ function DetailPage({ stock: initialStock, analysisDate: initialDate, onBack }) 
               </SectionBox>
             )}
 
+            {/* 팔란티어 비즈니스 모델 */}
+            {stock.businessModel && (
+              <>
+                <SectionBox title="정부 부문">
+                  <div style={{ display:"flex", flexDirection:"column", gap: 6 }}>
+                    <div style={{ fontSize: 12, color:"#4ade80", fontWeight: 600, marginBottom: 4 }}>{stock.businessModel.government.revenue}</div>
+                    {stock.businessModel.government.keyContracts.map((c, i) => (
+                      <div key={i} style={{ display:"flex", gap: 8, fontSize: 11, color:"rgba(255,255,255,0.65)" }}>
+                        <span style={{ color:"#8b5cf6", flexShrink: 0 }}>▸</span>
+                        <span style={{ lineHeight: 1.6 }}>{c}</span>
+                      </div>
+                    ))}
+                    <div style={{ fontSize: 10, color:"#60a5fa", marginTop: 4, padding:"6px 8px", background:"rgba(96,165,250,0.08)", borderRadius: 6 }}>
+                      해자: {stock.businessModel.government.moat}
+                    </div>
+                  </div>
+                </SectionBox>
+                <SectionBox title="상업 부문">
+                  <div style={{ display:"flex", flexDirection:"column", gap: 7 }}>
+                    <div style={{ fontSize: 12, color:"#4ade80", fontWeight: 600 }}>{stock.businessModel.commercial.revenue}</div>
+                    {[
+                      { label: "AIP 드라이버", value: stock.businessModel.commercial.aipDriver },
+                      { label: "핵심 지표", value: stock.businessModel.commercial.keyMetric },
+                      { label: "고객 증가", value: stock.businessModel.commercial.customerGrowth },
+                    ].map(({ label, value }) => (
+                      <div key={label} style={{ display:"flex", gap: 10, alignItems:"flex-start" }}>
+                        <span style={{ fontSize: 10, color:"rgba(255,255,255,0.35)", flexShrink: 0, paddingTop: 2, width: 56 }}>{label}</span>
+                        <span style={{ fontSize: 11, color:"rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </SectionBox>
+              </>
+            )}
+
+            {/* 팔란티어 버리 숏 분석 */}
+            {stock.bearCaseAnalysis?.burry && (
+              <SectionBox title="버리 공매도 분석">
+                <div style={{ display:"flex", flexDirection:"column", gap: 8 }}>
+                  <div style={{ fontSize: 11, padding:"6px 10px", background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.2)", borderRadius: 6, color:"#f87171" }}>
+                    포지션: {stock.bearCaseAnalysis.burry.position}
+                  </div>
+                  <div style={{ fontSize: 10, color:"rgba(255,255,255,0.3)", textTransform:"uppercase", letterSpacing: 1 }}>숏 논거</div>
+                  {stock.bearCaseAnalysis.burry.thesis.map((t, i) => (
+                    <div key={i} style={{ display:"flex", gap: 8, fontSize: 11, color:"rgba(255,255,255,0.6)" }}>
+                      <span style={{ color:"#f87171", flexShrink: 0 }}>▼</span>
+                      <span style={{ lineHeight: 1.6 }}>{t}</span>
+                    </div>
+                  ))}
+                  <div style={{ fontSize: 11, padding:"8px 10px", background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.15)", borderRadius: 6, color:"#4ade80", lineHeight: 1.6, marginTop: 2 }}>
+                    반론: {stock.bearCaseAnalysis.burry.counterArgument}
+                  </div>
+                </div>
+              </SectionBox>
+            )}
+
             {/* HMM 지정학 연결구조 */}
             {stock.geopoliticsConnection && (
               <SectionBox title={stock.geopoliticsConnection.title}>
