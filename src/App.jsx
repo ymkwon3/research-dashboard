@@ -405,6 +405,54 @@ function DetailPage({ stock: initialStock, analysisDate: initialDate, onBack }) 
               </SectionBox>
             )}
 
+            {/* HMM 지정학 연결구조 */}
+            {stock.geopoliticsConnection && (
+              <SectionBox title={stock.geopoliticsConnection.title}>
+                <div style={{ display:"flex", flexDirection:"column", gap: 7 }}>
+                  {stock.geopoliticsConnection.points.map((pt, i) => (
+                    <div key={i} style={{ display:"flex", gap: 8, fontSize: 11, color:"rgba(255,255,255,0.65)" }}>
+                      <span style={{ color:"#f59e0b", flexShrink: 0 }}>▸</span>
+                      <span style={{ lineHeight: 1.6 }}>{pt}</span>
+                    </div>
+                  ))}
+                </div>
+              </SectionBox>
+            )}
+
+            {/* HMM 수급 구조 */}
+            {stock.supplyDemand && (
+              <SectionBox title={stock.supplyDemand.title}>
+                <div style={{ display:"flex", flexDirection:"column", gap: 8 }}>
+                  {[
+                    { label: "수요", value: stock.supplyDemand.demand, color: "#60a5fa" },
+                    { label: "공급", value: stock.supplyDemand.supply, color: "#f87171" },
+                    { label: "결론", value: stock.supplyDemand.conclusion, color: "#f8fafc" },
+                    { label: "완충요인", value: stock.supplyDemand.mitigation, color: "#a3a3a3" },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} style={{ display:"flex", gap: 10, alignItems:"flex-start" }}>
+                      <span style={{ fontSize: 10, color:"rgba(255,255,255,0.35)", flexShrink: 0, paddingTop: 2, width: 44 }}>{label}</span>
+                      <span style={{ fontSize: 11, color, lineHeight: 1.6 }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </SectionBox>
+            )}
+
+            {/* 삼성전자 사업부문 */}
+            {stock.businessSegments && (
+              <SectionBox title="사업 부문">
+                <div style={{ display:"flex", flexDirection:"column", gap: 10 }}>
+                  {stock.businessSegments.map((seg, i) => (
+                    <div key={i} style={{ background:"rgba(255,255,255,0.03)", borderRadius: 8, padding:"10px 12px" }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color:"#f8fafc", marginBottom: 4 }}>{seg.name}</div>
+                      <p style={{ fontSize: 11, color:"rgba(255,255,255,0.5)", margin: "0 0 5px", lineHeight: 1.6 }}>{seg.detail}</p>
+                      <div style={{ fontSize: 10, color:"#60a5fa" }}>→ {seg.outlook}</div>
+                    </div>
+                  ))}
+                </div>
+              </SectionBox>
+            )}
+
             {/* 넥슨 파이프라인 */}
             {stock.pipeline && (
               <SectionBox title="신작 파이프라인">
