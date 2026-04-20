@@ -233,28 +233,28 @@ function DetailPage({ stock: initialStock, analysisDate: initialDate, onBack }) 
             ← 목록으로
           </button>
 
-          {/* 날짜 탭 (분석 날짜가 2개 이상일 때만 표시) */}
+          {/* 날짜 드롭다운 (분석 날짜가 2개 이상일 때만 표시) */}
           {availableDates.length > 1 && (
             <div style={{ display:"flex", alignItems:"center", gap: 8 }}>
               <span style={{ fontSize: 11, color:"rgba(255,255,255,0.3)" }}>분석 날짜</span>
-              <div style={{ display:"flex", gap: 5 }}>
+              <select
+                value={selectedDate ?? ""}
+                onChange={(e) => handleDateChange(e.target.value)}
+                disabled={dateLoading}
+                style={{
+                  background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 8, padding:"5px 10px", fontSize: 12, fontWeight: 600,
+                  color:"#f8fafc", cursor: dateLoading ? "default" : "pointer",
+                  outline:"none", appearance:"none", WebkitAppearance:"none",
+                  backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E")`,
+                  backgroundRepeat:"no-repeat", backgroundPosition:"right 9px center",
+                  paddingRight: 28, opacity: dateLoading ? 0.5 : 1,
+                }}
+              >
                 {availableDates.map(date => (
-                  <button
-                    key={date}
-                    onClick={() => handleDateChange(date)}
-                    disabled={dateLoading}
-                    style={{
-                      padding:"5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 600,
-                      cursor: dateLoading ? "default" : "pointer", border:"none", transition:"all 0.15s",
-                      background: selectedDate === date ? "#3b82f6" : "rgba(255,255,255,0.07)",
-                      color: selectedDate === date ? "#fff" : "rgba(255,255,255,0.5)",
-                      opacity: dateLoading ? 0.5 : 1,
-                    }}
-                  >
-                    {date}
-                  </button>
+                  <option key={date} value={date} style={{ background:"#1e293b", color:"#f8fafc" }}>{date}</option>
                 ))}
-              </div>
+              </select>
               {dateLoading && <span style={{ fontSize: 11, color:"rgba(255,255,255,0.3)" }}>로딩 중...</span>}
             </div>
           )}
